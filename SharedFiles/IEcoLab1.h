@@ -39,13 +39,12 @@ typedef struct IEcoLab1VTbl {
     uint32_t (ECOCALLMETHOD *Release)(/* in */ struct IEcoLab1* me);
 
     /* IEcoLab1 */
-    double_t (ECOCALLMETHOD *CbrtNewton)(/* in */ struct IEcoLab1* me, /* in */ double_t number,double_t epsilon);
+	double_t (ECOCALLMETHOD *CbrtNewton)(/* in */ struct IEcoLab1* me, /* in */ double_t number,double_t epsilon);
 	float_t (ECOCALLMETHOD *CbrtfNewton)(/* in */ struct IEcoLab1* me, /* in */ float_t number,double_t epsilon);
 	long double (ECOCALLMETHOD *CbrtlNewton)(/* in */ struct IEcoLab1* me, /* in */ long double number,double_t epsilon);
 	double_t (ECOCALLMETHOD *CbrtHalfDivision)(/* in */ struct IEcoLab1* me, /* in */ double_t number,double_t epsilon);
 	float_t (ECOCALLMETHOD *CbrtHalffDivision)(/* in */ struct IEcoLab1* me, /* in */ float_t number,double_t epsilon);
 	long double (ECOCALLMETHOD *CbrtHalflDivision)(/* in */ struct IEcoLab1* me, /* in */ long double number,double_t epsilon);
-	
 
 } IEcoLab1VTbl, *IEcoLab1VTblPtr;
 
