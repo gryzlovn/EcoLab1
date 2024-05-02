@@ -26,6 +26,11 @@
 #include "IdEcoLab1.h"
 #include "IEcoCalculatorY.h"
 #include "IEcoCalculatorX.h"
+#include "IEcoLab1Events.h"
+#include "IdEcoLab1.h"
+#include "IdEcoList1.h"
+#include "CEcoLab1Sink.h"
+#include "IEcoConnectionPointContainer.h"
 void TestConstNumbers(IEcoLab1* pIEcoLab1) {
 	float_t num_float=5;
 	long double num_longdouble=5;
@@ -195,10 +200,10 @@ void CountAndPrint(IEcoLab1* pIEcoLab1) {
 	int func=0;
 	double_t rez=0;
 	double_t rez2=0;
-	double_t num_double=0;
+	double_t num_double=231;
 	float_t num_float=0;
 	long double num_longdouble=0;
-	double_t epsilon=0;
+	double_t epsilon=0.01;
 	printf("Input the function 1-cbrt,2-cbrtf,3-cbrtl: \n");
 	scanf("%d", &func);
 	printf("Input the number: \n");
@@ -266,13 +271,21 @@ int16_t EcoMain(IEcoUnknown* pIUnk) {
 	double_t y=3;
 	double_t number=0;
 	double_t rez=0;
-	double_t num_double=0;
+	double_t num_double=937;
 	float_t num_float=0;
 	long double num_longdouble=0;
 	clock_t start=0, end=0;
 	double cpu_time_used=0;
-	double_t epsilon=0;
+	double_t epsilon=0.001;
 
+	/* Указатель на интерфейс контейнера точек подключения */
+    IEcoConnectionPointContainer* pICPC = 0;
+    /* Указатель на интерфейс точки подключения */
+    IEcoConnectionPoint* pICP = 0;
+    /* Указатель на обратный интерфейс */
+    IEcoLab1Events* pIEcoLab1Sink = 0;
+    IEcoUnknown* pISinkUnk = 0;
+    uint32_t cAdvise = 0;
 
     /* Проверка и создание системного интрефейса */
     if (pISys == 0) {
@@ -305,76 +318,121 @@ int16_t EcoMain(IEcoUnknown* pIUnk) {
         /* Освобождение системного интерфейса в случае ошибки */
         goto Release;
     }
+
     /* Получение тестируемого интерфейса */
     result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoLab1, 0, &IID_IEcoLab1, (void**) &pIEcoLab1);
     if (result != 0 || pIEcoLab1 == 0) {
         /* Освобождение интерфейсов в случае ошибки */
         goto Release;
     }
+
+	/* Проверка поддержки подключений обратного интерфейса */
+    result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoConnectionPointContainer, (void **)&pICPC);
+    if (result != 0 || pICPC == 0) {
+        /* Освобождение интерфейсов в случае ошибки */
+        goto Release;
+    }
+
+    /* Запрос на получения интерфейса точки подключения */
+    result = pICPC->pVTbl->FindConnectionPoint(pICPC, &IID_IEcoLab1Events, &pICP);
+    if (result != 0 || pICP == 0) {
+        /* Освобождение интерфейсов в случае ошибки */
+        goto Release;
+    }
+    /* Освобождение интерфейса */
+    pICPC->pVTbl->Release(pICPC);
+
+    /* Создание экземпляра обратного интерфейса */
+    result = createCEcoLab1Sink(pIMem, (IEcoLab1Events**)&pIEcoLab1Sink);
+
+    if (pIEcoLab1Sink != 0) {
+        result = pIEcoLab1Sink->pVTbl->QueryInterface(pIEcoLab1Sink, &IID_IEcoUnknown,(void **)&pISinkUnk);
+        if (result != 0 || pISinkUnk == 0) {
+            /* Освобождение интерфейсов в случае ошибки */
+            goto Release;
+        }
+        /* Подключение */
+        result = pICP->pVTbl->Advise(pICP, pISinkUnk, &cAdvise);
+        /* Проверка */
+        if (result == 0 && cAdvise == 1) {
+            /* Сюда можно добавить код */
+        }
+        /* Освобождение интерфейса */
+        pISinkUnk->pVTbl->Release(pISinkUnk);
+    }
+	rez=pIEcoLab1->pVTbl->CbrtNewton(pIEcoLab1, num_double,epsilon);
+	rez=pIEcoLab1->pVTbl->CbrtHalfDivision(pIEcoLab1, num_double,epsilon);
 	//TestConstNumbers(pIEcoLab1); // Тесты при number=const
 	//CountAndPrint(pIEcoLab1);		//Результат извлечения корня 
 	//TestConstEpsilone(pIEcoLab1);  //Тесты при epsilon=const
 	//rez = pow(number, 1.0 / 3.0);
 	//rez=pIEcoLab1->pVTbl->CbrtNewton(pIEcoLab1, num_double,epsilon);
 	//rez=pIEcoLab1->pVTbl->CbrtHalfDivision(pIEcoLab1, num_double,epsilon);
-	result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorX, (void **) &pIX);
-    if (result != 0 || pIX == 0) {
-        goto Release;
-    }
+	//result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorX, (void **) &pIX);
+ //   if (result != 0 || pIX == 0) {
+ //       goto Release;
+ //   }
 
-    printf("Xfile tests:\n");
-    printf("*Add - a + b = %d\n", pIX->pVTbl->Addition(pIX, a, b));
-    printf("*Subtract -  a - b = %d\n", pIX->pVTbl->Subtraction(pIX, a, b));
-    pIX->pVTbl->Release(pIX);
+ //   printf("Xfile tests:\n");
+ //   printf("*Add - a + b = %d\n", pIX->pVTbl->Addition(pIX, a, b));
+ //   printf("*Subtract -  a - b = %d\n", pIX->pVTbl->Subtraction(pIX, a, b));
+ //   pIX->pVTbl->Release(pIX);
 
 
-    result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorY, (void **) &pIY);
-    if (result != 0 || pIY == 0) {
-        goto Release;
-    }
+ //   result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorY, (void **) &pIY);
+ //   if (result != 0 || pIY == 0) {
+ //       goto Release;
+ //   }
 
-    printf("Yfile tests:\n");
-    printf("*Multiply - x * y = %d\n", pIY->pVTbl->Multiplication(pIY, x, y));
-    printf("*Divide - x / y = %d\n", pIY->pVTbl->Division(pIY, x, y));
-    pIY->pVTbl->Release(pIY);
+ //   printf("Yfile tests:\n");
+ //   printf("*Multiply - x * y = %d\n", pIY->pVTbl->Multiplication(pIY, x, y));
+ //   printf("*Divide - x / y = %d\n", pIY->pVTbl->Division(pIY, x, y));
+ //   pIY->pVTbl->Release(pIY);
 
-    
+ //   
 
-    printf("\nInterface test:\n");
+ //   printf("\nInterface test:\n");
 
-    result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorX, (void **) &pIX);
-    if (result == 0) {
-        printf("Query pIX from lab\n");
-        pIX->pVTbl->Release(pIX);
-    }
-    result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorY, (void **) &pIY);
-    if (result == 0) {
-        printf("Query pIY from lab\n");
-        pIY->pVTbl->Release(pIY);
-    }
+ //   result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorX, (void **) &pIX);
+ //   if (result == 0) {
+ //       printf("Query pIX from lab\n");
+ //       pIX->pVTbl->Release(pIX);
+ //   }
+ //   result = pIEcoLab1->pVTbl->QueryInterface(pIEcoLab1, &IID_IEcoCalculatorY, (void **) &pIY);
+ //   if (result == 0) {
+ //       printf("Query pIY from lab\n");
+ //       pIY->pVTbl->Release(pIY);
+ //   }
 
-    result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorX, (void **) &pIX);
-    if (result == 0) {
-        printf("Query pIX from pIX\n");
-        pIX->pVTbl->Release(pIX);
-    }
+ //   result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorX, (void **) &pIX);
+ //   if (result == 0) {
+ //       printf("Query pIX from pIX\n");
+ //       pIX->pVTbl->Release(pIX);
+ //   }
 
-    result = pIY->pVTbl->QueryInterface(pIY, &IID_IEcoCalculatorY, (void **) &pIY);
-    if (result == 0) {
-        printf("Query pIY from pIY\n");
-        pIY->pVTbl->Release(pIY);
-    }
+ //   result = pIY->pVTbl->QueryInterface(pIY, &IID_IEcoCalculatorY, (void **) &pIY);
+ //   if (result == 0) {
+ //       printf("Query pIY from pIY\n");
+ //       pIY->pVTbl->Release(pIY);
+ //   }
 
-    result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorY, (void **) &pIY);
-    if (result == 0) {
-        printf("Query pIY from pIX\n");
-        pIY->pVTbl->Release(pIY);
-    }
+ //   result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorY, (void **) &pIY);
+ //   if (result == 0) {
+ //       printf("Query pIY from pIX\n");
+ //       pIY->pVTbl->Release(pIY);
+ //   }
 
-    result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorX, (void **) &pIX);
-    if (result == 0) {
-        printf("Query pIX from pIY\n");
-        pIX->pVTbl->Release(pIX);
+ //   result = pIX->pVTbl->QueryInterface(pIX, &IID_IEcoCalculatorX, (void **) &pIX);
+ //   if (result == 0) {
+ //       printf("Query pIX from pIY\n");
+ //       pIX->pVTbl->Release(pIX);
+ //   }
+
+	if (pIEcoLab1Sink != 0) {
+		/* Отключение */
+		result = pICP->pVTbl->Unadvise(pICP, cAdvise);
+		pIEcoLab1Sink->pVTbl->Release(pIEcoLab1Sink);
+		pICP->pVTbl->Release(pICP);
     }
 
 Release:
@@ -393,7 +451,6 @@ Release:
     if (pIEcoLab1 != 0) {
         pIEcoLab1->pVTbl->Release(pIEcoLab1);
     }
-
 
     /* Освобождение системного интерфейса */
     if (pISys != 0) {

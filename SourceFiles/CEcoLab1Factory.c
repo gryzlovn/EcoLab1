@@ -255,7 +255,7 @@ CEcoLab1Factory g_x1F5DF16EE1BF43B999A434ED38FE8F3AFactory = {
     (CreateInstance)createCEcoLab1,
     (InitInstance)initCEcoLab1,
     "EcoLab1\0",
-    "1.0.0.0 \0",
+    "1.0.0.0\0",
     "CompanyName\0"
 };
 

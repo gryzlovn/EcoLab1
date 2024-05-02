@@ -23,29 +23,28 @@
 #include "IEcoLab1.h"
 #include "IEcoSystem1.h"
 #include "IdEcoMemoryManager1.h"
-#include "IEcoCalculatorY.h"
+/* Включение */
 #include "IEcoCalculatorX.h"
-
+#include "IEcoCalculatorY.h"
+/* Колбэки */
+#include "IEcoLab1Events.h"
+#include "IEcoEnumConnections.h"
+#include "IEcoConnectionPointContainer.h"
+#include "CEcoLab1ConnectionPoint.h"
 
 typedef struct CEcoLab1 {
 
     /* Таблица функций интерфейса IEcoLab1 */
     IEcoLab1VTbl* m_pVTblIEcoLab1;
 
-    /* Таблица функций интерфейса IEcoCalculatorX */
-    IEcoCalculatorYVTbl* m_pVTblIY;
+	/* Таблица функций интерфейса IEcoCalculatorX */
+    IEcoCalculatorXVTbl* m_pVTblIEcoCalculatorX;
 
     /* Таблица функций интерфейса IEcoCalculatorY */
-    IEcoCalculatorXVTbl* m_pVTblIX;
+    IEcoCalculatorYVTbl* m_pVTblIEcoCalculatorY;
 
-    /* Указатель на интерфейс */
-    IEcoCalculatorX* m_pIX;
-
-    /* Указатель на интерфейс */
-    IEcoCalculatorY* m_pIY;
-
-    /* Ссылка на интерфейс IEcoUnknown внутреннего агрегируемого компонента B */
-    IEcoUnknown*  m_pInnerUnknownB;
+	/* Таблица функций интерфейса IEcoConnectionPointContainer */
+    IEcoConnectionPointContainerVTbl* m_pVTblICPC;
 
     /* Счетчик ссылок */
     uint32_t m_cRef;
@@ -55,6 +54,22 @@ typedef struct CEcoLab1 {
 
     /* Системный интерфейс */
     IEcoSystem1* m_pISys;
+
+	/* Точка подключения */
+    CEcoLab1ConnectionPoint* m_pISinkCP;
+
+	/* Указатель на интерфейс IEcoCalculatorX включаемого компонента */
+    IEcoCalculatorX* m_pIEcoCalculatorX;
+
+    /* Указатель на интерфейс IEcoCalculatorY включаемого компонента */
+    IEcoCalculatorY* m_pIEcoCalculatorY;
+
+    /* Неделегирующий интерфейс IEcoUnknown */
+    IEcoUnknownVTbl* m_pVTblINondelegatingUnk;
+
+    /* Делегирующий IEcoUnknown, указывает на внешний
+    или неделегирующий IEcoUnknown */
+    IEcoUnknown* m_pIUnkOuter;
 
     /* Данные экземпляра */
     char_t* m_Name;
